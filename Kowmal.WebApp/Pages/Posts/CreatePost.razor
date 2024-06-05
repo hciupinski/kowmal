@@ -1,0 +1,122 @@
+﻿@page "/posts/create"
+@using Kowmal.WebApp.Components
+@using Kowmal.WebApp.Models
+@inject HttpClient Http
+@inject IConfiguration Config
+@using FluentValidation
+@using Kowmal.WebApp.Clients
+@inject IApiClient ApiClient
+
+<PageTitle>Post</PageTitle>
+
+<h1>New Post</h1>
+
+<p>Create new post</p>
+
+<AuthorizeView>
+    <Authorized>
+        <div>
+            <MudCard>
+                <MudForm Model="@_model" @ref="@_form" Validation="@(_createPostValidator.ValidateValue)" ValidationDelay="0">
+                    <MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)" Immediate="true" Label="Name"></MudTextField>
+                    <MudTextField @bind-Value="_model.Description" Label="Description" Variant="Variant.Filled" Lines="5"></MudTextField>
+                </MudForm>
+
+                <UploadFilesZone OnFilesChanged="HandleFilesChanged"/>
+                
+                <MudCardActions>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="@(async () => await CreatePostAction())">Create</MudButton>
+
+                    <MudButton Variant="Variant.Filled" Disabled="!IsUploaded" Color="Color.Dark" Class="ml-auto" OnClick="@(async () => await PublishPostAction())">Publish</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </div>
+    </Authorized>
+    <Authorizing>
+        <div>Loading...</div>
+    </Authorizing>
+    <NotAuthorized>
+        <div>Not authenticated</div>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+    [Inject] ISnackbar Snackbar { get; set; }
+    CreatePostFluentValidator _createPostValidator = new CreatePostFluentValidator();
+    CreatePostModel _model = new CreatePostModel();
+    MudForm _form;
+    private string? _token;
+    private bool IsUploaded;
+
+    private async Task CreatePostAction()
+    {
+        await _form.Validate();
+
+        if (_form.IsValid)
+        {
+            _model.Identifier = await ApiClient.CreatePostAsync(new CreatePostRequest() { Name = _model.Name, Description = _model.Description}, _token);
+
+            await ApiClient.UploadPhotosAsync(new UploadPhotosRequest() { Files = _model.Files, Identifier = _model.Identifier.Value }, "token");
+            
+            Snackbar.Add("Success");
+
+            IsUploaded = true;
+        }
+    }
+
+    private async Task PublishPostAction()
+    {
+        await ApiClient.PublishPostAsync(new PublishPostRequest() { Identifier = _model.Identifier!.Value});
+        
+        Snackbar.Add("Success");
+    }
+    
+    private void HandleFilesChanged(List<IBrowserFile> files)
+    {
+        _model.Files = files;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        //_token = await ApiClient.GetAntiforgeryToken();
+    }
+
+    /// <summary>
+    /// A standard AbstractValidator which contains multiple rules and can be shared with the back end API
+    /// </summary>
+    /// <typeparam name="CreatePostModel"></typeparam>
+    public class CreatePostFluentValidator : AbstractValidator<CreatePostModel>
+    {
+        public CreatePostFluentValidator()
+        {
+            RuleFor(x => x.Name)
+                .NotEmpty()
+                .Length(1, 100);
+
+            RuleFor(x => x.Description)
+                .NotEmpty()
+                .Length(1, 100);
+
+            RuleFor(x => x.Files)
+                .NotEmpty();
+        }
+
+        public Func<object, string, Task<IEnumerable<string>>> ValidateValue => async (model, propertyName) =>
+        {
+            var result = await ValidateAsync(ValidationContext<CreatePostModel>.CreateWithOptions((CreatePostModel)model, x => x.IncludeProperties(propertyName)));
+            if (result.IsValid)
+                return Array.Empty<string>();
+            return result.Errors.Select(e => e.ErrorMessage);
+        };
+    }
+    
+    public record CreatePostModel
+    {
+        public Guid? Identifier { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public List<IBrowserFile>? Files { get; set; }
+    }
+
+}

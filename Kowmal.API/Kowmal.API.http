@@ -1,0 +1,12 @@
+@Kowmal.API_HostAddress = http://localhost:5137
+
+POST {{Kowmal.API_HostAddress}}/auth/login
+Accept: application/json
+
+
+{
+"email": "admin@admin.com",
+"password" : "mySecret"
+}
+
+###

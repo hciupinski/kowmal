@@ -1,0 +1,12 @@
+﻿services:
+  fileworker:
+    image: fileworker
+    build:
+      context: .
+      dockerfile: FileWorker/Dockerfile
+
+  photoconverter:
+    image: photoconverter
+    build:
+      context: .
+      dockerfile: PhotoConverter/Dockerfile
