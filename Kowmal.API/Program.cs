@@ -6,12 +6,11 @@ using Kowmal.API.Persistance;
 using Kowmal.API.Persistance.Helpers;
 using Kowmal.API.Services;
 using Kowmal.API.Services.Interfaces;
-using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var configuration = builder.Configuration;
+var configuration = builder.Configuration.AddEnvironmentVariables().Build();
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
