@@ -30,7 +30,7 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Progr
 #if DEBUG
 builder.Services.AddScoped<IFileClient, LocalFileClient>();
 #else
-builder.Services.AddScoped<IFileService, FileService>();
+builder.Services.AddScoped<IFileClient, FileClient>();
 #endif
 builder.Services.AddScoped<IPhotoConverter, PhotoConverter>();
 builder.Services.AddScoped<IPostService, PostService>();
