@@ -5,7 +5,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		docker-compose.yml = docker-compose.yml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kowmal.App", "Kowmal.App\Kowmal.App.csproj", "{37CA7B64-5E1C-4FC4-A77F-195BE34C65EA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kowmal.WebApp", "Kowmal.WebApp\Kowmal.WebApp.csproj", "{37CA7B64-5E1C-4FC4-A77F-195BE34C65EA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
