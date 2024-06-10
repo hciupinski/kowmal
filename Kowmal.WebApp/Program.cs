@@ -2,12 +2,15 @@ using System.Text.Json.Serialization;
 using Kowmal.WebApp.Clients;
 using Kowmal.WebApp.Clients.Interfaces;
 using Kowmal.WebApp.Components;
+using Kowmal.WebApp.Extensions;
 using Kowmal.WebApp.MapperProfiles;
 using Kowmal.WebApp.Persistance;
 using Kowmal.WebApp.Persistance.Helpers;
 using Kowmal.WebApp.Services;
 using Kowmal.WebApp.Services.Interfaces;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +26,9 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =
 builder.Services.AddDbContextFactory<AppDbContext>(opt =>
     opt.UseSqlite($"Data Source={nameof(AppDbContext.KowmalDb)}.db"));
 
+builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddEntityFrameworkStores<AppDbContext>();
+
 builder.Services.AddAutoMapper(typeof(PostsProfile));
 
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
@@ -35,10 +41,7 @@ builder.Services.AddScoped<IFileClient, FileClient>();
 builder.Services.AddScoped<IPhotoConverter, PhotoConverter>();
 builder.Services.AddScoped<IPostService, PostService>();
 
-// builder.Services.AddOidcAuthentication(options =>
-// {
-//     builder.Configuration.Bind("Local", options.ProviderOptions);
-// });
+builder.Services.AddGoogleAuthentication(builder.Configuration);
 
 var app = builder.Build();
 
@@ -55,6 +58,9 @@ var options = scope.ServiceProvider.GetRequiredService<DbContextOptions<AppDbCon
 await AppDbContextHelpers.EnsureDbCreatedAndSeedWithCountOfAsync(options, 10);
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseStaticFiles();
 app.UseAntiforgery();

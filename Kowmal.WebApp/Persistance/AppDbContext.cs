@@ -1,11 +1,13 @@
 using System.Diagnostics;
 using Kowmal.WebApp.Models;
 using Kowmal.WebApp.Persistance.Configuration;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kowmal.WebApp.Persistance;
 
-public class AppDbContext : DbContext
+public class AppDbContext : IdentityDbContext<IdentityUser>
 {
     // Magic string.
     public static readonly string RowVersion = nameof(RowVersion);

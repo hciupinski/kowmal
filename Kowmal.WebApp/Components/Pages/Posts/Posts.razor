@@ -1,12 +1,15 @@
 @page "/posts"
+@attribute [Authorize]
 @using Kowmal.WebApp.Features.GetPosts
 @using Kowmal.WebApp.Features.PublishPost
 @using Kowmal.WebApp.ViewModels
 @using MediatR
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 @inject IMediator Mediator
 
-@* <AuthorizeView Context="authContext"> *@
-@*     <Authorized> *@
+<AuthorizeView Context="authContext">
+    <Authorized>
         <div>
             <MudCard>
                 <MudCardHeader>
@@ -46,14 +49,14 @@
 
             </MudCard>
         </div>
-@*     </Authorized> *@
-@*     <Authorizing> *@
-@*         <div>Loading...</div> *@
-@*     </Authorizing> *@
-@*     <NotAuthorized> *@
-@*         <div>Not authenticated</div> *@
-@*     </NotAuthorized> *@
-@* </AuthorizeView> *@
+    </Authorized>
+    <Authorizing>
+        <div>Loading...</div>
+    </Authorizing>
+    <NotAuthorized>
+        <div>Not authenticated</div>
+    </NotAuthorized>
+</AuthorizeView>
 
 @code {
     [Inject] ISnackbar Snackbar { get; set; }

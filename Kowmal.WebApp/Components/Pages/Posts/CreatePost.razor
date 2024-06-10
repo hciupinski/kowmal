@@ -1,10 +1,13 @@
 ﻿@page "/posts/create"
+@attribute [Authorize]
 @using FluentValidation
 @using Kowmal.WebApp.Features.CreatePost
 @using Kowmal.WebApp.Features.PublishPost
 @using Kowmal.WebApp.Features.UploadPhotos
 @using MediatR
 @using Kowmal.WebApp.Components.Components
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 @inject IMediator Mediator
 @rendermode InteractiveServer
 
@@ -14,8 +17,8 @@
 
 <p>Create new post</p>
 
-@* <AuthorizeView> *@
-@*     <Authorized> *@
+<AuthorizeView>
+    <Authorized>
         <div>
             <MudCard>
                 <MudForm Model="@_model" @ref="@_form" Validation="@(_createPostValidator.ValidateValue)" ValidationDelay="0">
@@ -32,14 +35,14 @@
                 </MudCardActions>
             </MudCard>
         </div>
-@*     </Authorized> *@
-@*     <Authorizing> *@
-@*         <div>Loading...</div> *@
-@*     </Authorizing> *@
-@*     <NotAuthorized> *@
-@*         <div>Not authenticated</div> *@
-@*     </NotAuthorized> *@
-@* </AuthorizeView> *@
+    </Authorized>
+    <Authorizing>
+        <div>Loading...</div>
+    </Authorizing>
+    <NotAuthorized>
+        <div>Not authenticated</div>
+    </NotAuthorized>
+</AuthorizeView>
 
 
 @code {
