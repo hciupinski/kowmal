@@ -23,7 +23,7 @@
                            @ondragleave="@ClearDragClass"
                            @ondragend="@ClearDragClass">
                 <ButtonTemplate>
-                    <MudPaper Height="300px"
+                    <MudPaper Height="220px"
                               Outlined="true"
                               Class="@_dragClass">
                         <MudText Typo="Typo.h6">
@@ -37,12 +37,6 @@
                     </MudPaper>
                     <MudToolBar DisableGutters="true"
                                 Class="relative d-flex justify-end gap-4 z-30">
-                        <MudButton HtmlTag="label"
-                                   Color="Color.Primary"
-                                   for="@context.Id"
-                                   Variant="Variant.Filled">
-                            Open file picker
-                        </MudButton>
                         <MudButton OnClick="@context.Actions.ClearAsync"
                                    Color="Color.Error"
                                    Disabled="@(_model.Files is null || !_model.Files.Any())"
@@ -52,9 +46,6 @@
                     </MudToolBar>
                 </ButtonTemplate>
             </MudFileUpload>
-        </MudItem>
-        <MudItem xs="12">
-            IsValid: @_isValid - IsTouched: @_isTouched
         </MudItem>
     </MudForm>
 </MudStack>
