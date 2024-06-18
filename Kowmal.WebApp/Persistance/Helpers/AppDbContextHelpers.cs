@@ -17,8 +17,9 @@ public static class AppDbContextHelpers
         await using var context = new AppDbContext(builder.Options);
         
         // Result is true if the database had to be created.
-        if (await context.Database.EnsureCreatedAsync())
+        if (await context.Database.EnsureCreatedAsync() && (await context.Database.GetPendingMigrationsAsync()).Any())
         {
+            await context.Database.MigrateAsync();
             //var seed = new DataSeeder();
             //await seed.SeedDatabaseWithInitialDataAsync(context, count);
         }

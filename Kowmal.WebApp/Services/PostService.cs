@@ -14,6 +14,10 @@ public class PostService : IPostService
         _dbContext = dbContext;
     }
     
+    public IQueryable<Post> GetPostsAsQueryable()
+    {
+        return _dbContext.Posts.Include(x => x.Photos).AsQueryable();
+    }
     public async Task<List<Post>> GetPostsAsync(CancellationToken cancellationToken = default)
     {
         return await _dbContext.Posts.Include(x => x.Photos).ToListAsync(cancellationToken);
@@ -28,7 +32,7 @@ public class PostService : IPostService
     
     public async Task<Post?> GetPostAsync(Guid identifier, CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Posts.FirstOrDefaultAsync(x => x.Identifier == identifier, cancellationToken);
+        return await _dbContext.Posts.Include(x => x.Photos).FirstOrDefaultAsync(x => x.Identifier == identifier, cancellationToken);
     }
     
     public async Task<Post?> GetPostIncludingPhotosAsync(Guid identifier, CancellationToken cancellationToken = default)

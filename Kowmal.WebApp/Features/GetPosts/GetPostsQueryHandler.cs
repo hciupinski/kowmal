@@ -2,6 +2,7 @@ using AutoMapper;
 using Kowmal.WebApp.Services.Interfaces;
 using Kowmal.WebApp.ViewModels;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace Kowmal.WebApp.Features.GetPosts;
 
@@ -17,8 +18,11 @@ public class GetPostsQueryHandler : IRequestHandler<GetPostsQuery, IEnumerable<P
     }
     public async Task<IEnumerable<PostListItemViewModel>> Handle(GetPostsQuery request, CancellationToken cancellationToken)
     {
-        var posts = await _postService.GetPostsAsync(cancellationToken);
-
+        var posts = _postService
+            .GetPostsAsQueryable()
+            .OrderBy(x => x.IsPublished)
+            .ThenByDescending(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
         return _mapper.Map<IEnumerable<PostListItemViewModel>>(posts);
     }
 }
