@@ -19,6 +19,7 @@ public static class AppDbContextHelpers
         // Result is true if the database had to be created.
         if (await context.Database.EnsureCreatedAsync())
         {
+            await context.Database.MigrateAsync();
             //var seed = new DataSeeder();
             //await seed.SeedDatabaseWithInitialDataAsync(context, count);
         }

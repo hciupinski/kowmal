@@ -1,51 +1,40 @@
 ﻿@page "/posts/create"
+@attribute [Authorize]
 @using FluentValidation
 @using Kowmal.WebApp.Features.CreatePost
-@using Kowmal.WebApp.Features.PublishPost
 @using Kowmal.WebApp.Features.UploadPhotos
 @using MediatR
 @using Kowmal.WebApp.Components.Components
+@using Kowmal.WebApp.ViewModels
+@using Severity = MudBlazor.Severity
 @inject IMediator Mediator
+@inject NavigationManager NavManager
 @rendermode InteractiveServer
 
 <PageTitle>Post</PageTitle>
 
 <h1>New Post</h1>
 
-<p>Create new post</p>
+<div>
+    <MudCard>
+        <MudForm Model="@_model" @ref="@_form" Validation="@(_createPostValidator.ValidateValue)" ValidationDelay="0">
+            <MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)" Immediate="true" Label="Name"></MudTextField>
+            <MudTextField @bind-Value="_model.Description" For="@(() => _model.Description)" Label="Description" Variant="Variant.Filled" Lines="5"></MudTextField>
+        </MudForm>
 
-@* <AuthorizeView> *@
-@*     <Authorized> *@
-        <div>
-            <MudCard>
-                <MudForm Model="@_model" @ref="@_form" Validation="@(_createPostValidator.ValidateValue)" ValidationDelay="0">
-                    <MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)" Immediate="true" Label="Name"></MudTextField>
-                    <MudTextField @bind-Value="_model.Description" Label="Description" Variant="Variant.Filled" Lines="5"></MudTextField>
-                </MudForm>
+        <UploadFilesZone OnFilesChanged="HandleFilesChanged"/>
 
-                <UploadFilesZone OnFilesChanged="HandleFilesChanged"/>
-                
-                <MudCardActions>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="@(async () => await CreatePostAction())">Create</MudButton>
-
-                    <MudButton Variant="Variant.Filled" Disabled="!IsUploaded" Color="Color.Dark" Class="ml-auto" OnClick="@(async () => await PublishPostAction())">Publish</MudButton>
-                </MudCardActions>
-            </MudCard>
-        </div>
-@*     </Authorized> *@
-@*     <Authorizing> *@
-@*         <div>Loading...</div> *@
-@*     </Authorizing> *@
-@*     <NotAuthorized> *@
-@*         <div>Not authenticated</div> *@
-@*     </NotAuthorized> *@
-@* </AuthorizeView> *@
+        <MudCardActions >
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mx-2" OnClick="@(async () => await CreatePostAction())">Create</MudButton>
+        </MudCardActions>
+    </MudCard>
+</div>
 
 
 @code {
     [Inject] ISnackbar Snackbar { get; set; }
     CreatePostFluentValidator _createPostValidator = new CreatePostFluentValidator();
-    CreatePostModel _model = new CreatePostModel();
+    CreatePostViewModel _model = new CreatePostViewModel();
     MudForm _form;
     private string? _token;
     private bool IsUploaded;
@@ -56,40 +45,30 @@
 
         if (_form.IsValid)
         {
-            var post = await Mediator.Send(new CreatePostRequest() {Name = _model.Name, Description = _model.Description});
+            var post = await Mediator.Send(new CreatePostRequest() { Name = _model.Name, Description = _model.Description });
 
             _model.Identifier = post.Identifier;
-            
-            await Mediator.Send(new UploadPhotosRequest() { Files = _model.Files!, PostId = _model.Identifier.Value});
-            
-            Snackbar.Add("Success");
+
+            await Mediator.Send(new UploadPhotosRequest() { Files = _model.Files!, PostId = _model.Identifier.Value });
+
+            Snackbar.Add("Post created!", Severity.Success);
+
+            NavManager.NavigateTo($"/posts/{_model.Identifier}/edit");
 
             IsUploaded = true;
         }
     }
 
-    private async Task PublishPostAction()
-    {
-        await Mediator.Send(new PublishPostRequest(_model.Identifier!.Value));
-        
-        Snackbar.Add("Success");
-    }
-    
     private void HandleFilesChanged(List<IBrowserFile> files)
     {
         _model.Files = files;
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        //_token = await ApiClient.GetAntiforgeryToken();
     }
 
     /// <summary>
     /// A standard AbstractValidator which contains multiple rules and can be shared with the back end API
     /// </summary>
     /// <typeparam name="CreatePostModel"></typeparam>
-    public class CreatePostFluentValidator : AbstractValidator<CreatePostModel>
+    public class CreatePostFluentValidator : AbstractValidator<CreatePostViewModel>
     {
         public CreatePostFluentValidator()
         {
@@ -107,19 +86,11 @@
 
         public Func<object, string, Task<IEnumerable<string>>> ValidateValue => async (model, propertyName) =>
         {
-            var result = await ValidateAsync(ValidationContext<CreatePostModel>.CreateWithOptions((CreatePostModel)model, x => x.IncludeProperties(propertyName)));
+            var result = await ValidateAsync(ValidationContext<CreatePostViewModel>.CreateWithOptions((CreatePostViewModel)model, x => x.IncludeProperties(propertyName)));
             if (result.IsValid)
                 return Array.Empty<string>();
             return result.Errors.Select(e => e.ErrorMessage);
         };
-    }
-    
-    public record CreatePostModel
-    {
-        public Guid? Identifier { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public List<IBrowserFile>? Files { get; set; }
     }
 
 }

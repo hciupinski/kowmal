@@ -1,0 +1,114 @@
+﻿@page "/posts/{PostIdentifier:guid}/edit"
+@attribute [Authorize]
+@using FluentValidation
+@using Kowmal.WebApp.Features.PublishPost
+@using MediatR
+@using Kowmal.WebApp.Components.Components
+@using Kowmal.WebApp.Features.GetPost
+@using Kowmal.WebApp.ViewModels
+@using Severity = MudBlazor.Severity
+@inject IMediator Mediator
+@rendermode InteractiveServer
+
+<PageTitle>Post</PageTitle>
+
+<h1>Edit post</h1>
+
+<AuthorizeView>
+    <Authorized>
+        <div>
+            <MudCard>
+                <MudForm Model="@_model" @ref="@_form" Validation="@(_editPostValidator.ValidateValue)" ValidationDelay="0">
+                    <MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)" Immediate="true" Label="Name"></MudTextField>
+                    <MudTextField @bind-Value="_model.Description" Label="Description" Variant="Variant.Filled" Lines="5"></MudTextField>
+                </MudForm>
+
+                <div>
+                    <div class="my-2">
+                        <h5>Already updated files.</h5>
+                    </div>
+
+                    @foreach (var file in _model.UploadedFileNames)
+                    {
+                        <MudChip Variant="Variant.Text" Color="Color.Info">@file</MudChip>
+                    }
+                </div>
+
+                <UploadFilesZone OnFilesChanged="HandleFilesChanged"/>
+
+                <MudCardActions>
+                    <MudButton Variant="Variant.Filled" Color="Color.Dark" OnClick="@(async () => await PublishPostAction())">Publish</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </div>
+    </Authorized>
+    <Authorizing>
+        <div>Loading...</div>
+    </Authorizing>
+    <NotAuthorized>
+        <div>Not authenticated</div>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+    [Parameter] public Guid PostIdentifier { get; set; }
+    [Inject] ISnackbar Snackbar { get; set; }
+    EditPostFluentValidator _editPostValidator = new EditPostFluentValidator();
+    PostViewModel _model = new PostViewModel();
+    MudForm _form;
+    private string? _token;
+    private bool IsUploaded;
+
+    private async Task SaveAction()
+    {
+        throw new NotImplementedException("Save edited post not available yet.");
+    }
+
+    private async Task PublishPostAction()
+    {
+        await Mediator.Send(new PublishPostRequest(_model.Identifier!.Value));
+
+        Snackbar.Add("Post published!", Severity.Success);
+    }
+
+    private void HandleFilesChanged(List<IBrowserFile> files)
+    {
+        _model.NewFiles = files;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _model = await Mediator.Send(new GetPostQuery(PostIdentifier));
+    }
+
+    /// <summary>
+    /// A standard AbstractValidator which contains multiple rules and can be shared with the back end API
+    /// </summary>
+    /// <typeparam name="PostViewModel"></typeparam>
+    public class EditPostFluentValidator : AbstractValidator<PostViewModel>
+    {
+        public EditPostFluentValidator()
+        {
+            RuleFor(x => x.Name)
+                .NotEmpty()
+                .Length(1, 100);
+
+            RuleFor(x => x.Description)
+                .NotEmpty()
+                .Length(1, 100);
+
+            RuleFor(x => x.NewFiles)
+                .NotEmpty();
+        }
+
+        public Func<object, string, Task<IEnumerable<string>>> ValidateValue => async (model, propertyName) =>
+        {
+            var result = await ValidateAsync(ValidationContext<PostViewModel>.CreateWithOptions((PostViewModel)model, x => x.IncludeProperties(propertyName)));
+            if (result.IsValid)
+                return Array.Empty<string>();
+            return result.Errors.Select(e => e.ErrorMessage);
+        };
+    }
+
+}

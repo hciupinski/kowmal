@@ -1,59 +1,52 @@
 @page "/posts"
+@attribute [Authorize]
 @using Kowmal.WebApp.Features.GetPosts
 @using Kowmal.WebApp.Features.PublishPost
 @using Kowmal.WebApp.ViewModels
 @using MediatR
+@inject NavigationManager NavManager
 @inject IMediator Mediator
+@rendermode InteractiveServer
 
-@* <AuthorizeView Context="authContext"> *@
-@*     <Authorized> *@
-        <div>
-            <MudCard>
-                <MudCardHeader>
-                    <MudNavLink Href="/posts/create" Icon="@Icons.Material.Filled.AdminPanelSettings">Create post</MudNavLink>
-                </MudCardHeader>
-                <MudTable Items="@Items" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info" >
-                    <HeaderContent>
-                        <MudTh>Name</MudTh>
-                        <MudTh>Description</MudTh>
-                        <MudTh>Photos</MudTh>
-                        <MudTh>IsPublished</MudTh>
-                        <MudTh>Action</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Name">@context.Name</MudTd>
-                        <MudTd DataLabel="Description">@context.Description</MudTd>
-                        <MudTd DataLabel="Photos">@context.PhotosCount</MudTd>
-                        <MudTd DataLabel="IsPublished">
+<div>
+    <MudCard>
+        <MudCardHeader>
+            <MudNavLink Href="/posts/create" Icon="@Icons.Material.Filled.AdminPanelSettings">Create post</MudNavLink>
+        </MudCardHeader>
+        <MudTable T="PostListItemViewModel" Items="@Items" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info" OnRowClick="RedirectToEdit">
+            <HeaderContent>
+                <MudTh>Name</MudTh>
+                <MudTh>Description</MudTh>
+                <MudTh>Photos</MudTh>
+                <MudTh>IsPublished</MudTh>
+                <MudTh>Action</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Name">@context.Name</MudTd>
+                <MudTd DataLabel="Description">@context.Description</MudTd>
+                <MudTd DataLabel="Photos">@context.PhotosCount</MudTd>
+                <MudTd DataLabel="IsPublished">
 
-                            @if (context.IsPublished)
-                            {
-                                <MudChip Color="Color.Success">Yes</MudChip>
-                            }
-                            else
-                            {
-                                <MudChip Color="Color.Secondary">No</MudChip>
-                            }
-                        </MudTd>
-                        <MudTd>
-                            @if (!context.IsPublished)
-                            {
-                                <MudButton Variant="Variant.Filled" Color="Color.Dark" Class="ml-auto" OnClick="@(async () => await PublishPostAction(context.Identifier))">Publish</MudButton>
-                            }
-                        </MudTd>
-                    </RowTemplate>
-                </MudTable>
+                    @if (context.IsPublished)
+                    {
+                        <MudChip Color="Color.Success">Yes</MudChip>
+                    }
+                    else
+                    {
+                        <MudChip Color="Color.Secondary">No</MudChip>
+                    }
+                </MudTd>
+                <MudTd>
+                    @if (!context.IsPublished)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Dark" Class="ml-auto" OnClick="@(async () => await PublishPostAction(context.Identifier))">Publish</MudButton>
+                    }
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
 
-            </MudCard>
-        </div>
-@*     </Authorized> *@
-@*     <Authorizing> *@
-@*         <div>Loading...</div> *@
-@*     </Authorizing> *@
-@*     <NotAuthorized> *@
-@*         <div>Not authenticated</div> *@
-@*     </NotAuthorized> *@
-@* </AuthorizeView> *@
+    </MudCard>
+</div>
 
 @code {
     [Inject] ISnackbar Snackbar { get; set; }
@@ -68,12 +61,21 @@
         _loading = false;
     }
 
+    private void RedirectToEdit(TableRowClickEventArgs<PostListItemViewModel> tableRowClickEventArgs)
+    {
+        if (!tableRowClickEventArgs.Item.IsPublished)
+        {
+            NavManager.NavigateTo($"/posts/{tableRowClickEventArgs.Item.Identifier}/edit");
+        }
+    }
+
     private async Task PublishPostAction(Guid identifier)
     {
         await Mediator.Send(new PublishPostRequest(identifier));
-        
-        Snackbar.Add("Success");
+
+        Snackbar.Add("Post published!");
 
         await OnInitializedAsync();
     }
+
 }

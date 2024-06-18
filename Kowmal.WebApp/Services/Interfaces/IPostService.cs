@@ -10,4 +10,5 @@ public interface IPostService
     Task<Post?> GetPostIncludingPhotosAsync(Guid identifier, CancellationToken cancellationToken = default);
     Task<Post?> UpdatePostAsync(Post post, CancellationToken cancellationToken = default);
     Task<List<Post>> GetPublishedPostsAsync(CancellationToken cancellationToken = default);
+    IQueryable<Post> GetPostsAsQueryable();
 }
