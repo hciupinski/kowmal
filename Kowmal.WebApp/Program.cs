@@ -3,6 +3,7 @@ using Kowmal.WebApp.Clients;
 using Kowmal.WebApp.Clients.Interfaces;
 using Kowmal.WebApp.Components;
 using Kowmal.WebApp.Components.Pages.Account;
+using Kowmal.WebApp.Configuration;
 using Kowmal.WebApp.MapperProfiles;
 using Kowmal.WebApp.Persistance;
 using Kowmal.WebApp.Persistance.Helpers;
@@ -18,6 +19,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.Configure<AzureStorageOptions>(builder.Configuration.GetSection("AzureStorage"));
 
 builder.Services.AddMudServices();
 
@@ -49,6 +52,7 @@ builder.Services.AddScoped<CustomCookieAuthenticationEvents>();
 #if DEBUG
 builder.Services.AddScoped<IFileClient, LocalFileClient>();
 #else
+builder.Services.AddScoped<IBlobClient, AzureBlobClient>();
 builder.Services.AddScoped<IFileClient, FileClient>();
 #endif
 builder.Services.AddScoped<IPhotoConverter, PhotoConverter>();
