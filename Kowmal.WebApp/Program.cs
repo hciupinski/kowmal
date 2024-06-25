@@ -71,8 +71,8 @@ if (!app.Environment.IsDevelopment())
 }
 
 await using var scope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateAsyncScope();
-var options = scope.ServiceProvider.GetRequiredService<DbContextOptions<AppDbContext>>();
-await AppDbContextHelpers.EnsureDbCreatedAndSeedWithCountOfAsync(options, 10);
+var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+await dbContext.Database.MigrateAsync();
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
